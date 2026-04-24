@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>聚餐好選擇 V2 🍽️</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+:root{--red:#E84040;--orange:#F97316;--yellow:#FBBF24;--green:#22C55E;--bg:#FFF8F0;--card:#fff;--text:#1A1A1A;--muted:#888;--border:#E5D8CC;--radius:16px;--shadow:0 4px 20px rgba(0,0,0,.08);}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+.banner{background:linear-gradient(135deg,var(--red),var(--orange));color:white;padding:24px 20px 20px;text-align:center;position:relative;overflow:hidden;}
+.banner::before{content:'🍜🥢🍺🎉🍗🦞🔥';position:absolute;top:-4px;left:0;right:0;font-size:28px;letter-spacing:4px;opacity:.15;}
+.banner h1{font-size:26px;font-weight:900;letter-spacing:2px;}
+.banner .subtitle{font-size:13px;margin-top:8px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.badge{background:rgba(255,255,255,.2);padding:3px 12px;border-radius:20px;font-size:12px;}
+.stats-btn{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.25);color:white;border:2px solid rgba(255,255,255,.5);padding:6px 14px;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;}
+.deadline-bar{background:#FEF3C7;border-bottom:2px solid var(--yellow);padding:8px 16px;text-align:center;font-size:13px;font-weight:600;color:#92400E;display:none;}
+.closed-bar{background:#FEE2E2;border-bottom:2px solid var(--red);padding:12px 16px;text-align:center;font-size:14px;font-weight:700;color:var(--red);display:none;}
+.container{max-width:600px;margin:0 auto;padding:20px 16px 80px;}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-bottom:16px;border:1px solid var(--border);animation:fadeIn .3s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.card-title{font-size:16px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.icon-red{background:#FEE2E2;}.icon-orange{background:#FEF3C7;}.icon-green{background:#DCFCE7;}.icon-blue{background:#DBEAFE;}
+.input-group{margin-bottom:14px;}
+.input-group label{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px;display:block;}
+.input-group input{width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:15px;font-family:inherit;background:#FFFAF7;}
+.input-group input:focus{outline:none;border-color:var(--orange);}
+.btn-group{display:flex;gap:8px;flex-wrap:wrap;}
+.opt-btn{padding:9px 16px;border-radius:10px;border:2px solid var(--border);background:white;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;color:var(--text);transition:all .15s;}
+.opt-btn:hover{border-color:var(--orange);background:#FFF7ED;}
+.opt-btn.selected{background:var(--orange);border-color:var(--orange);color:white;font-weight:700;}
+.opt-btn.drink-yes.selected{background:var(--red);border-color:var(--red);}
+.opt-btn.drink-no.selected{background:#64748B;border-color:#64748B;}
+.restaurant-list{display:flex;flex-direction:column;gap:10px;}
+.rest-card{border:2px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:all .2s;background:white;display:flex;align-items:center;gap:12px;}
+.rest-card:hover{border-color:var(--orange);background:#FFFAF7;transform:translateY(-1px);}
+.rest-card.selected{border-color:var(--red);background:#FFF5F5;box-shadow:0 0 0 3px rgba(232,64,64,.15);}
+.rest-emoji{font-size:28px;width:44px;text-align:center;flex-shrink:0;}
+.rest-info{flex:1;}
+.rest-name{font-size:15px;font-weight:700;}
+.rest-meta{font-size:12px;color:var(--muted);margin-top:3px;display:flex;gap:8px;flex-wrap:wrap;}
+.rest-meta a{color:var(--orange);text-decoration:none;}
+.stars{color:#F59E0B;}
+.rest-check{font-size:22px;opacity:0;transition:opacity .2s;}
+.rest-card.selected .rest-check{opacity:1;}
+.other-dropdown{display:none;margin-top:10px;padding:10px;background:#FFF7ED;border-radius:10px;border:1px solid var(--border);}
+.other-dropdown.show{display:block;}
+.other-opt{display:block;width:100%;padding:10px 14px;margin-bottom:6px;border-radius:8px;border:2px solid var(--border);background:white;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--text);text-align:left;transition:all .15s;}
+.other-opt:last-child{margin-bottom:0;}
+.other-opt:hover{background:#FEE2E2;border-color:var(--red);color:var(--red);}
+.dish-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+@media(min-width:400px){.dish-grid{grid-template-columns:repeat(3,1fr);}}
+.dish-btn{padding:9px 8px;border-radius:10px;border:2px solid var(--border);background:white;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;color:var(--text);text-align:center;line-height:1.3;transition:all .15s;}
+.dish-btn:hover{border-color:var(--green);background:#F0FDF4;}
+.dish-btn.selected{background:var(--green);border-color:var(--green);color:white;font-weight:700;}
+/* 月份選擇 */
+.month-select-grid{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+.month-btn{padding:10px 20px;border-radius:10px;border:2px solid var(--border);background:white;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--text);transition:all .15s;}
+.month-btn:hover{border-color:var(--orange);background:#FFF7ED;}
+.month-btn.selected{background:var(--orange);border-color:var(--orange);color:white;}
+/* 月曆 */
+.cal-hint{font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.6;}
+.cal-legend{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
+.leg{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;}
+.leg-dot{width:14px;height:14px;border-radius:4px;}
+.leg-dot.available{background:#DCFCE7;border:2px solid var(--green);}
+.leg-dot.busy{background:#FEE2E2;border:2px solid var(--red);}
+.leg-dot.holiday{background:#F3F4F6;border:2px solid #D1D5DB;}
+.cal-block{margin-bottom:4px;}
+.cal-month-title{font-size:15px;font-weight:900;margin-bottom:10px;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.cal-dow{text-align:center;font-size:11px;font-weight:700;color:var(--muted);padding:4px 0;}
+.cal-dow.sun{color:#EF4444;}.cal-dow.sat{color:#3B82F6;}
+.cal-day{aspect-ratio:1;border-radius:10px;border:2px solid var(--border);background:#DCFCE7;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#166534;transition:all .15s;-webkit-tap-highlight-color:transparent;}
+.cal-day:hover{transform:scale(1.05);}
+.cal-day.busy{background:#FEE2E2;border-color:var(--red);color:#991B1B;}
+.cal-day.holiday{background:#F3F4F6;border-color:#E5E7EB;color:#9CA3AF;cursor:not-allowed;}
+.cal-day.holiday:hover{transform:none;}
+.cal-day.weekend{background:#F8FAFC;border-color:#E2E8F0;color:#CBD5E1;cursor:not-allowed;}
+.cal-day.weekend:hover{transform:none;}
+.cal-day.empty{background:transparent;border:none;cursor:default;}
+.cal-day.empty:hover{transform:none;}
+.cal-day-num{font-size:14px;font-weight:800;line-height:1;}
+.cal-day-label{font-size:9px;font-weight:600;margin-top:2px;opacity:.8;}
+.next-btn{width:100%;margin-top:12px;padding:12px;background:var(--orange);color:white;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;}
+.step-hidden{display:none;}
+.submit-btn{width:100%;padding:16px;background:linear-gradient(135deg,var(--red),var(--orange));color:white;border:none;border-radius:12px;font-size:17px;font-weight:900;font-family:inherit;cursor:pointer;letter-spacing:1px;box-shadow:0 4px 15px rgba(232,64,64,.4);transition:all .2s;margin-top:12px;}
+.submit-btn:disabled{opacity:.6;cursor:not-allowed;}
+.voted-banner{background:#FEF3C7;border:2px solid var(--yellow);border-radius:12px;padding:12px 16px;margin-bottom:16px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;}
+.edit-btn{margin-left:auto;background:var(--orange);color:white;border:none;padding:6px 14px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1A1A1A;color:white;padding:12px 24px;border-radius:24px;font-size:14px;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,.3);transition:transform .3s,opacity .3s;opacity:0;z-index:999;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+.toast.success{background:var(--green);}.toast.error{background:var(--red);}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.show{display:flex;}
+.modal-box{background:white;border-radius:20px;padding:28px 24px;max-width:360px;width:100%;text-align:center;animation:popIn .3s cubic-bezier(.34,1.56,.64,1);}
+@keyframes popIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
+.modal-box .big-icon{font-size:56px;margin-bottom:12px;}
+.modal-box h2{font-size:20px;font-weight:900;margin-bottom:6px;}
+.modal-box p{font-size:14px;color:var(--muted);margin-bottom:20px;}
+.sponsor-opts{display:flex;flex-direction:column;gap:8px;}
+.sponsor-btn{padding:12px 16px;border-radius:12px;border:2px solid var(--border);background:white;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;text-align:left;}
+.sponsor-btn:hover{transform:translateX(4px);}
+.sponsor-btn.gold{border-color:#F59E0B;color:#92400E;background:#FFFBEB;}
+.sponsor-btn.stock{border-color:#3B82F6;color:#1E3A8A;background:#EFF6FF;}
+.sponsor-btn.pocket{border-color:#EC4899;color:#831843;background:#FDF2F8;}
+.sponsor-btn.broke{border-color:#EF4444;color:#7F1D1D;background:#FEF2F2;}
+.page{display:none;}.page.active{display:block;}
+.stats-section{margin-bottom:20px;}
+.stats-section h3{font-size:15px;font-weight:700;margin-bottom:12px;color:var(--muted);}
+.bar-item{margin-bottom:10px;}
+.bar-label{font-size:14px;font-weight:600;margin-bottom:4px;display:flex;justify-content:space-between;}
+.bar-track{height:10px;background:#F3F4F6;border-radius:5px;overflow:hidden;}
+.bar-fill{height:100%;background:linear-gradient(90deg,var(--red),var(--orange));border-radius:5px;transition:width .8s;}
+.bar-fill.green{background:linear-gradient(90deg,#16A34A,var(--green));}
+.top-restaurant{background:linear-gradient(135deg,#FFF7ED,#FEF3C7);border:2px solid var(--orange);border-radius:12px;padding:16px;text-align:center;margin-bottom:16px;}
+.common-dates{background:#F0FDF4;border:2px solid var(--green);border-radius:12px;padding:14px;margin-bottom:16px;}
+.common-dates h4{font-size:14px;font-weight:700;color:#16A34A;margin-bottom:8px;}
+.date-chips{display:flex;gap:6px;flex-wrap:wrap;}
+.date-chip{background:var(--green);color:white;padding:5px 12px;border-radius:20px;font-size:13px;font-weight:700;}
+.dish-rank{display:flex;flex-direction:column;gap:8px;}
+.dish-rank-item{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#FFFAF7;border-radius:8px;}
+.rank-no{font-size:18px;font-weight:900;width:28px;text-align:center;}
+.rank-name{flex:1;font-size:14px;font-weight:600;}
+.rank-count{font-size:13px;color:var(--muted);font-weight:600;}
+.back-btn{width:100%;padding:14px;background:white;border:2px solid var(--border);border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--text);margin-top:8px;}
+.loading{text-align:center;padding:30px;color:var(--muted);}
+.spinner{width:32px;height:32px;margin:0 auto 12px;border:3px solid var(--border);border-top-color:var(--orange);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="banner">
+  <button class="stats-btn" onclick="showStats()">📊 查看統計</button>
+  <h1 id="banner-title">🍽️ 聚餐好選擇 V2</h1>
+  <div class="subtitle" id="banner-reasons"></div>
+</div>
+<div class="deadline-bar" id="deadline-bar"></div>
+<div class="closed-bar" id="closed-bar">🔒 投票已截止，感謝大家參與！</div>
+
+<div id="page-vote" class="page active">
+<div class="container">
+  <div id="voted-banner" class="voted-banner" style="display:none">
+    ✅ 你已經投過票囉！<button class="edit-btn" onclick="enableEdit()">✏️ 修改</button>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="card" id="step1">
+    <div class="card-title"><div class="icon icon-red">👤</div>基本資料</div>
+    <div class="input-group">
+      <label>姓名 / 綽號</label>
+      <input type="text" id="name" placeholder="輸入你的名字或綽號" oninput="state.name=this.value.trim()">
+    </div>
+    <div class="input-group" style="margin-bottom:0">
+      <label>你是哪邊來的？</label>
+      <div class="btn-group" id="company-group">
+        <button class="opt-btn" onclick="selectCompany(this,'茂林光電')">⚡ 茂林光電</button>
+        <button class="opt-btn" onclick="selectCompany(this,'東立材料')">🏭 東立材料</button>
+        <button class="opt-btn" onclick="selectCompany(this,'路人甲')">🚶 路人甲/過去式</button>
+      </div>
+    </div>
+    <button class="next-btn" onclick="nextStep(1)">下一步 →</button>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="card step-hidden" id="step2">
+    <div class="card-title"><div class="icon icon-orange">🍺</div>你喝酒嗎？</div>
+    <div class="btn-group">
+      <button class="opt-btn drink-yes" onclick="selectDrink(this,'是')">🍺 喝！當然喝！</button>
+      <button class="opt-btn drink-no" onclick="selectDrink(this,'否')">🧃 我不喝</button>
+    </div>
+    <button class="next-btn" onclick="nextStep(2)">下一步 →</button>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="card step-hidden" id="step3">
+    <div class="card-title"><div class="icon icon-red">🍜</div>選一間餐廳</div>
+    <div class="restaurant-list" id="restaurant-list">
+      <div class="loading"><div class="spinner"></div>載入中...</div>
+    </div>
+    <div class="other-dropdown" id="other-dropdown">
+      <button class="other-opt" onclick="selectOtherReason('實在太遠、下次再說')">😅 實在太遠、下次再說</button>
+      <button class="other-opt" onclick="selectOtherReason('嘴炮+1（要帶小孩）')">👶 嘴炮+1（要帶小孩）</button>
+    </div>
+    <button class="next-btn" onclick="nextStep(3)">下一步 →</button>
+  </div>
+
+  <!-- 其它快速送出 -->
+  <div class="card step-hidden" id="step-other-submit" style="text-align:center;">
+    <div style="font-size:48px;margin-bottom:12px;">😅</div>
+    <div style="font-size:17px;font-weight:900;margin-bottom:6px;" id="other-reason-display"></div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:20px;">沒關係，下次有機會！還是記錄一下你的存在 😄</div>
+    <button class="submit-btn" onclick="submitVote()">📝 送出（我不去）</button>
+  </div>
+
+  <!-- STEP 4 菜色 -->
+  <div class="card step-hidden" id="step4">
+    <div class="card-title">
+      <div class="icon icon-green">🍽️</div>
+      最想吃什麼？<span style="font-size:12px;font-weight:400;color:var(--muted);margin-left:4px">（可複選）</span>
+    </div>
+    <div class="dish-grid" id="dish-grid"></div>
+    <button class="next-btn" onclick="nextStep(4)">下一步 →</button>
+  </div>
+
+  <!-- STEP 5 月份選擇 + 月曆 -->
+  <div class="card step-hidden" id="step5">
+    <div class="card-title"><div class="icon icon-blue">📅</div>哪些天你<strong style="color:var(--red)">不能</strong>去？</div>
+    <div style="margin-bottom:14px;">
+      <div style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:8px;">選擇月份</div>
+      <div class="month-select-grid" id="month-select-grid"></div>
+    </div>
+    <div id="cal-area" style="display:none;">
+      <div class="cal-hint">🟢 預設全部可以去，點選<strong>不能去</strong>的日期讓它變紅。週末與假日已灰掉。</div>
+      <div class="cal-legend">
+        <div class="leg"><div class="leg-dot available"></div>可以去</div>
+        <div class="leg"><div class="leg-dot busy"></div>不能去</div>
+        <div class="leg"><div class="leg-dot holiday"></div>假日/週末</div>
+      </div>
+      <div id="cal-container"></div>
+    </div>
+    <button class="submit-btn" id="submit-btn" onclick="submitVote()">🎉 送出投票</button>
+  </div>
+</div>
+</div>
+
+<!-- 統計頁 -->
+<div id="page-stats" class="page">
+<div class="container">
+  <div class="card">
+    <div class="card-title"><div class="icon icon-orange">📊</div>即時投票統計</div>
+    <div id="stats-content"><div class="loading"><div class="spinner"></div>載入中...</div></div>
+  </div>
+  <button class="back-btn" onclick="showVote()">← 回去投票</button>
+</div>
+</div>
+
+<!-- 贊助彈窗 -->
+<div class="modal-overlay" id="sponsor-modal">
+  <div class="modal-box">
+    <div class="big-icon">💸</div>
+    <h2>你願意贊助多少？</h2>
+    <p>上次你還欠一頓，這次機會來了！</p>
+    <div class="sponsor-opts">
+      <button class="sponsor-btn gold" onclick="selectSponsor('脖子上的黃金項鍊')">💛 脖子上的黃金項鍊</button>
+      <button class="sponsor-btn stock" onclick="selectSponsor('股票的10%')">📈 股票的 10%</button>
+      <button class="sponsor-btn pocket" onclick="selectSponsor('自己的私房錢')">💝 自己的私房錢</button>
+      <button class="sponsor-btn broke" onclick="selectSponsor('窮到要脫褲')">😭 窮到要脫褲</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const GAS_URL = 'YOUR_GAS_DEPLOY_URL';
+const MONTH_NAMES = ['','一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
+const DOW_NAMES = ['日','一','二','三','四','五','六'];
+
+let config = {};
+let state = { name:'', company:'', drink:'', restaurantId:'', dishes:[], busyDates:[], selectedMonth:'', isEditing:false, voterId:'', otherReason:'' };
+
+// ── 初始化 ──
+window.addEventListener('DOMContentLoaded', () => {
+  const savedName = localStorage.getItem('jc_name') || '';
+  if (savedName) { document.getElementById('name').value = savedName; state.name = savedName; }
+  jsonp(`${GAS_URL}?action=getConfig`, (res) => {
+    if (!res || res.status !== 'ok') return showToast('載入失敗，請重新整理', 'error');
+    config = res;
+    applyConfig();
+    checkExistingVote();
+  });
+});
+
+function applyConfig() {
+  // Banner
+  document.getElementById('banner-title').textContent = `🍽️ ${config.event_name}`;
+  document.title = config.event_name;
+  const reasons = config.event_reasons || [];
+  document.getElementById('banner-reasons').innerHTML = reasons.map(r => `<span class="badge">${r}</span>`).join('');
+
+  // 截止日期
+  if (config.deadline) {
+    const dl = document.getElementById('deadline-bar');
+    dl.textContent = `⏰ 投票截止日：${config.deadline}`;
+    dl.style.display = 'block';
+  }
+
+  // 關閉投票
+  if (config.vote_status === 'closed') {
+    document.getElementById('closed-bar').style.display = 'block';
+    document.getElementById('submit-btn').disabled = true;
+  }
+
+  // 餐廳清單
+  renderRestaurantList();
+
+  // 月份選擇
+  renderMonthSelect();
+}
+
+function renderRestaurantList() {
+  const list = document.getElementById('restaurant-list');
+  const rests = config.restaurants || [];
+  if (rests.length === 0) {
+    list.innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px;">尚未設定餐廳</div>';
+    return;
+  }
+  list.innerHTML = rests.map(r => `
+    <div class="rest-card" onclick="selectRestaurant(this,'${r.id}')">
+      <div class="rest-emoji">${r.emoji}</div>
+      <div class="rest-info">
+        <div class="rest-name">${r.name}</div>
+        <div class="rest-meta">
+          <span class="stars">★★★★☆</span><span>${r.stars}（${r.review_count} 評）</span>
+          <span>💰 ${r.avg_cost}</span>
+          <a href="${r.map_url}" target="_blank" onclick="event.stopPropagation()">📍 地圖</a>
+        </div>
+      </div>
+      <div class="rest-check">✅</div>
+    </div>
+  `).join('') + `
+    <div class="rest-card" id="other-card" onclick="toggleOtherDropdown()">
+      <div class="rest-emoji">💬</div>
+      <div class="rest-info"><div class="rest-name">其它</div><div class="rest-meta"><span>點我展開選項...</span></div></div>
+      <div class="rest-check" id="other-check" style="opacity:0">✅</div>
+    </div>`;
+}
+
+function renderMonthSelect() {
+  const months = config.months || [];
+  const grid = document.getElementById('month-select-grid');
+  grid.innerHTML = months.map(ym => {
+    const [y,m] = ym.split('-');
+    return `<button class="month-btn" data-ym="${ym}" onclick="selectMonth('${ym}',this)">${y}年 ${MONTH_NAMES[parseInt(m)]}</button>`;
+  }).join('');
+}
+
+// ── 逐步顯示 ──
+function nextStep(step) {
+  if (step===1) {
+    if (!document.getElementById('name').value.trim()) return showToast('❗ 請輸入姓名！','error');
+    if (!state.company) return showToast('❗ 請選擇公司！','error');
+    showStep('step2');
+  } else if (step===2) {
+    if (!state.drink) return showToast('❗ 請選擇是否喝酒！','error');
+    showStep('step3');
+  } else if (step===3) {
+    if (!state.restaurantId) return showToast('❗ 請選擇一間餐廳！','error');
+    const dishes = (config.dishes||{})[state.restaurantId];
+    if (dishes && dishes.length > 0) { renderDishes(state.restaurantId); showStep('step4'); }
+    else showStep('step5');
+  } else if (step===4) {
+    showStep('step5');
+  }
+  setTimeout(() => {
+    const next = document.getElementById(`step${step+1}`);
+    if (next && !next.classList.contains('step-hidden')) next.scrollIntoView({behavior:'smooth',block:'start'});
+  }, 100);
+}
+
+function showStep(id) { const el=document.getElementById(id); if(el) el.classList.remove('step-hidden'); }
+
+// ── 月份 + 月曆 ──
+function selectMonth(ym, btn) {
+  document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  state.selectedMonth = ym;
+  state.busyDates = state.busyDates.filter(d => !d.startsWith(ym));
+  renderSingleMonth(ym);
+  document.getElementById('cal-area').style.display = 'block';
+  setTimeout(() => document.getElementById('cal-area').scrollIntoView({behavior:'smooth',block:'start'}), 100);
+}
+
+function renderSingleMonth(ym) {
+  const [y,m] = ym.split('-').map(Number);
+  const holidaySet = new Set(config.holidays || []);
+  const container = document.getElementById('cal-container');
+  container.innerHTML = '';
+
+  const block = document.createElement('div');
+  block.className = 'cal-block';
+  const title = document.createElement('div');
+  title.className = 'cal-month-title';
+  title.textContent = `📅 ${y} 年 ${MONTH_NAMES[m]}`;
+  block.appendChild(title);
+
+  const grid = document.createElement('div');
+  grid.className = 'cal-grid';
+  DOW_NAMES.forEach((d,i) => {
+    const dow = document.createElement('div');
+    dow.className = 'cal-dow'+(i===0?' sun':i===6?' sat':'');
+    dow.textContent = d;
+    grid.appendChild(dow);
+  });
+
+  const firstDow = new Date(y, m-1, 1).getDay();
+  for (let i=0;i<firstDow;i++) { const e=document.createElement('div');e.className='cal-day empty';grid.appendChild(e); }
+
+  const daysInMonth = new Date(y, m, 0).getDate();
+  for (let d=1;d<=daysInMonth;d++) {
+    const dateKey = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dow = new Date(y,m-1,d).getDay();
+    const isWeekend = dow===0||dow===6;
+    const isHoliday = holidaySet.has(dateKey);
+    const cell = document.createElement('div');
+    cell.className = 'cal-day';
+    cell.dataset.date = dateKey;
+    const numEl = document.createElement('div');
+    numEl.className = 'cal-day-num';
+    numEl.textContent = d;
+    cell.appendChild(numEl);
+    if (isWeekend) {
+      cell.classList.add('weekend');
+      const lbl=document.createElement('div');lbl.className='cal-day-label';lbl.textContent=dow===0?'日':'六';cell.appendChild(lbl);
+    } else if (isHoliday) {
+      cell.classList.add('holiday');
+      const lbl=document.createElement('div');lbl.className='cal-day-label';lbl.textContent='假';cell.appendChild(lbl);
+    } else {
+      if (state.busyDates.includes(dateKey)) {
+        cell.classList.add('busy');
+        const lbl=document.createElement('div');lbl.className='cal-day-label';lbl.textContent='✗';cell.appendChild(lbl);
+      }
+      cell.addEventListener('click', () => toggleBusyDate(cell, dateKey));
+    }
+    grid.appendChild(cell);
+  }
+  block.appendChild(grid);
+  container.appendChild(block);
+}
+
+function toggleBusyDate(cell, dateKey) {
+  if (cell.classList.contains('busy')) {
+    cell.classList.remove('busy');
+    state.busyDates = state.busyDates.filter(d=>d!==dateKey);
+    const lbl=cell.querySelector('.cal-day-label');if(lbl)lbl.remove();
+  } else {
+    cell.classList.add('busy');
+    state.busyDates.push(dateKey);
+    const lbl=document.createElement('div');lbl.className='cal-day-label';lbl.textContent='✗';cell.appendChild(lbl);
+  }
+}
+
+// ── 選項 ──
+function selectCompany(btn,company){document.querySelectorAll('#company-group .opt-btn').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');state.company=company;localStorage.setItem('jc_company',company);}
+function selectDrink(btn,val){document.querySelectorAll('.opt-btn.drink-yes,.opt-btn.drink-no').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');state.drink=val;}
+function selectRestaurant(card,id){document.querySelectorAll('.rest-card').forEach(c=>c.classList.remove('selected'));const oc=document.getElementById('other-check');if(oc)oc.style.opacity='0';card.classList.add('selected');state.restaurantId=id;state.otherReason='';state.dishes=[];document.getElementById('other-dropdown').classList.remove('show');}
+function toggleOtherDropdown(){document.getElementById('other-dropdown').classList.toggle('show');}
+function selectOtherReason(reason){document.querySelectorAll('.rest-card').forEach(c=>c.classList.remove('selected'));const oc=document.getElementById('other-card');if(oc){oc.classList.add('selected');}const och=document.getElementById('other-check');if(och)och.style.opacity='1';document.getElementById('other-dropdown').classList.remove('show');state.restaurantId='other_'+Date.now();state.otherReason=reason;state.dishes=[];state.busyDates=[];document.getElementById('other-reason-display').textContent=reason;document.getElementById('step4').classList.add('step-hidden');document.getElementById('step5').classList.add('step-hidden');showStep('step-other-submit');setTimeout(()=>document.getElementById('step-other-submit').scrollIntoView({behavior:'smooth',block:'start'}),100);}
+function renderDishes(id){const dishes=(config.dishes||{})[id]||[];document.getElementById('dish-grid').innerHTML=dishes.map(d=>`<button class="dish-btn" onclick="toggleDish(this,'${d.replace(/'/g,"\\'")}')">${d}</button>`).join('');}
+function toggleDish(btn,dish){btn.classList.toggle('selected');if(btn.classList.contains('selected')){if(!state.dishes.includes(dish))state.dishes.push(dish);}else state.dishes=state.dishes.filter(d=>d!==dish);}
+
+// ── 送出 ──
+function submitVote(){
+  const name=document.getElementById('name').value.trim();
+  if(!name)return showToast('❗ 請輸入姓名！','error');
+  if(!state.company)return showToast('❗ 請選擇公司！','error');
+  if(!state.drink)return showToast('❗ 請選擇是否喝酒！','error');
+  if(!state.restaurantId)return showToast('❗ 請選擇一間餐廳！','error');
+  state.name=name;
+  localStorage.setItem('jc_name',name);
+  localStorage.setItem('jc_company',state.company);
+  document.getElementById('sponsor-modal').classList.add('show');
+}
+
+function selectSponsor(choice){
+  document.getElementById('sponsor-modal').classList.remove('show');
+  if(choice==='窮到要脫褲'){showToast('😭 窮到要脫褲！重新填一次吧！','error');setTimeout(resetForm,1500);return;}
+  showToast(`💸 ${choice}，感謝你的慷慨！`,'success');
+  doSubmit(choice);
+}
+
+function doSubmit(sponsor){
+  const voterId = getVoterId(state.name, state.company);
+  state.voterId = voterId;
+  const isOther = state.otherReason !== '';
+  const payload={
+    action: state.isEditing?'updateVote':'submitVote',
+    voter_id:voterId, name:state.name, company:state.company, drink:state.drink,
+    restaurant_id: isOther ? `other` : state.restaurantId,
+    dishes:state.dishes, busy_dates:state.busyDates, sponsor
+  };
+  if(isOther) payload.restaurant_id = `other（${state.otherReason}）`;
+  const btn=document.getElementById('submit-btn');
+  if(btn){btn.disabled=true;btn.textContent='⏳ 送出中...';}
+  fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+  .then(()=>{
+    state.isEditing=false;
+    document.getElementById('voted-banner').innerHTML=`✅ <strong>${state.name}</strong>，你已投票！<button class="edit-btn" onclick="enableEdit()">✏️ 修改投票</button>`;
+    document.getElementById('voted-banner').style.display='flex';
+    if(btn){btn.disabled=true;btn.textContent='✅ 已送出';}
+    showToast('🎉 投票成功！','success');
+  }).catch(()=>{showToast('❌ 送出失敗','error');if(btn){btn.disabled=false;btn.textContent='🎉 送出投票';}});
+}
+
+function resetForm(){
+  state={name:'',company:'',drink:'',restaurantId:'',dishes:[],busyDates:[],selectedMonth:'',isEditing:false,voterId:'',otherReason:''};
+  document.getElementById('name').value='';
+  document.querySelectorAll('.opt-btn.selected,.rest-card.selected,.dish-btn.selected,.month-btn.selected').forEach(el=>el.classList.remove('selected'));
+  const och=document.getElementById('other-check');if(och)och.style.opacity='0';
+  ['step2','step3','step4','step5','step-other-submit'].forEach(id=>document.getElementById(id).classList.add('step-hidden'));
+  document.getElementById('cal-area').style.display='none';
+  document.getElementById('cal-container').innerHTML='';
+  const btn=document.getElementById('submit-btn');if(btn){btn.disabled=false;btn.textContent='🎉 送出投票';}
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function getVoterId(name,company){return btoa(encodeURIComponent(`${name}|${company}`)).replace(/=/g,'');}
+
+function checkExistingVote(){
+  const savedName=localStorage.getItem('jc_name')||'';
+  const savedCompany=localStorage.getItem('jc_company')||'';
+  if(!savedName||!savedCompany)return;
+  const voterId=getVoterId(savedName,savedCompany);
+  state.voterId=voterId;
+  jsonp(`${GAS_URL}?action=checkVoter&voter_id=${encodeURIComponent(voterId)}`,(res)=>{
+    if(res&&res.voted){
+      document.getElementById('voted-banner').innerHTML=`✅ <strong>${savedName}</strong>，你已投票！<button class="edit-btn" onclick="enableEdit()">✏️ 修改投票</button>`;
+      document.getElementById('voted-banner').style.display='flex';
+      const btn=document.getElementById('submit-btn');if(btn){btn.disabled=true;btn.textContent='✅ 已投票（點修改按鈕可修改）';}
+    }
+  });
+}
+
+function enableEdit(){
+  state.isEditing=true;
+  document.getElementById('voted-banner').style.display='none';
+  ['step2','step3','step4','step5'].forEach(id=>showStep(id));
+  const btn=document.getElementById('submit-btn');if(btn){btn.disabled=false;btn.textContent='💾 確認修改';}
+  showToast('✏️ 修改模式，改完再按送出！','success');
+}
+
+// ── 統計 ──
+function showStats(){document.getElementById('page-vote').classList.remove('active');document.getElementById('page-stats').classList.add('active');window.scrollTo(0,0);loadStats();}
+function showVote(){document.getElementById('page-stats').classList.remove('active');document.getElementById('page-vote').classList.add('active');window.scrollTo(0,0);}
+function loadStats(){
+  document.getElementById('stats-content').innerHTML='<div class="loading"><div class="spinner"></div>載入統計中...</div>';
+  jsonp(`${GAS_URL}?action=getStats`,(res)=>{
+    if(!res||res.status!=='ok'){document.getElementById('stats-content').innerHTML='<p style="color:var(--muted);text-align:center;padding:20px">統計載入失敗</p>';return;}
+    renderStats(res);
+  });
+}
+function renderStats(res){
+  const rests=config.restaurants||[];
+  const total=res.totalVoters;
+  if(total===0){document.getElementById('stats-content').innerHTML='<div style="text-align:center;padding:30px;color:var(--muted)">😴 還沒有人投票，快去揪人！</div>';return;}
+  const RANK=['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟'];
+  const topRest=rests.find(r=>r.id===res.topRestId);
+  let html=`<div style="text-align:center;margin-bottom:16px;color:var(--muted);font-size:14px">共 <strong style="color:var(--text);font-size:18px">${total}</strong> 人投票 · ${res.drinkCount} 人喝酒 🍺</div>`;
+  if(topRest)html+=`<div class="top-restaurant"><div style="font-size:32px">👑</div><div style="font-size:20px;font-weight:900;margin:4px 0">${topRest.emoji} ${topRest.name}</div><div style="font-size:14px;color:var(--muted)">${res.topRestaurantCount} 票・⭐ ${topRest.stars}・💰 ${topRest.avg_cost}</div><div style="margin-top:8px"><a href="${topRest.map_url}" target="_blank" style="color:var(--orange);font-size:13px;font-weight:600">📍 Google Maps →</a></div></div>`;
+  html+=`<div class="stats-section"><h3>🍜 餐廳票數</h3>`;
+  Object.entries(res.restaurantCount||{}).sort((a,b)=>b[1]-a[1]).forEach(([rid,cnt])=>{
+    const r=rests.find(r=>r.id===rid);
+    const name=r?`${r.emoji} ${r.name}`:rid;
+    const pct=Math.round(cnt/total*100);
+    html+=`<div class="bar-item"><div class="bar-label"><span>${name}</span><span>${cnt} 票（${pct}%）</span></div><div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div></div>`;
+  });
+  html+=`</div>`;
+  if(res.topDishes?.length>0){html+=`<div class="stats-section"><h3>🍽️ ${topRest?.name||''} — 最想吃 TOP${res.topDishes.length}</h3><div class="dish-rank">`;res.topDishes.forEach((item,i)=>{html+=`<div class="dish-rank-item"><span class="rank-no">${RANK[i]||i+1}</span><span class="rank-name">${item.name}</span><span class="rank-count">${item.count} 票</span></div>`;});html+=`</div></div>`;}
+  html+=`<div class="common-dates"><h4>✅ 大家都可以的日期</h4>`;
+  html+=res.commonDates?.length>0?`<div class="date-chips">${res.commonDates.map(d=>`<span class="date-chip">${formatDate(d)}</span>`).join('')}</div>`:`<div style="color:var(--muted);font-size:13px;">目前還沒有找到大家都可以的日期</div>`;
+  html+=`</div>`;
+  if(res.availableDates?.length>0){html+=`<div class="stats-section"><h3>📅 各日期可參加人數</h3>`;res.availableDates.slice(0,15).forEach(x=>{const pct=x.total>0?Math.round(x.count/x.total*100):0;html+=`<div class="bar-item"><div class="bar-label"><span>📅 ${formatDate(x.date)}</span><span>${x.count}/${x.total} 人（${pct}%）</span></div><div class="bar-track"><div class="bar-fill green" style="width:${pct}%"></div></div></div>`;});html+=`</div>`;}
+  document.getElementById('stats-content').innerHTML=html;
+}
+
+function formatDate(dateKey){const d=new Date(dateKey+'T00:00:00+08:00');const dow=['日','一','二','三','四','五','六'][d.getDay()];return `${d.getMonth()+1}/${d.getDate()}（${dow}）`;}
+
+function jsonp(url,callback){const cb='_jcb'+Date.now();window[cb]=(data)=>{callback(data);delete window[cb];document.head.removeChild(script);};const script=document.createElement('script');script.src=url+(url.includes('?')?'&':'?')+`callback=${cb}&t=${Date.now()}`;script.onerror=()=>{callback(null);delete window[cb];};document.head.appendChild(script);}
+function showToast(msg,type){const t=document.getElementById('toast');t.textContent=msg;t.className=`toast ${type} show`;clearTimeout(window._tt);window._tt=setTimeout(()=>t.classList.remove('show'),3000);}
+</script>
+</body>
+</html>

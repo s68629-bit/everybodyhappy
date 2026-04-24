@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>聚餐好選擇 V2 — 後台管理</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+:root{--red:#E84040;--orange:#F97316;--green:#22C55E;--blue:#3B82F6;--bg:#F8FAFC;--card:#fff;--text:#1A1A1A;--muted:#64748B;--border:#E2E8F0;--radius:12px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* Login */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--red),var(--orange));}
+.login-box{background:white;border-radius:20px;padding:40px 32px;width:320px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+.login-box h1{font-size:22px;font-weight:900;margin-bottom:6px;}
+.login-box p{color:var(--muted);font-size:14px;margin-bottom:24px;}
+.login-box input{width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:16px;font-family:inherit;text-align:center;letter-spacing:4px;margin-bottom:12px;}
+.login-box input:focus{outline:none;border-color:var(--orange);}
+.login-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--red),var(--orange));color:white;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;}
+
+/* Layout */
+.admin-wrap{display:none;min-height:100vh;}
+.sidebar{width:220px;background:#1E293B;position:fixed;top:0;left:0;bottom:0;padding:20px 0;z-index:100;}
+.sidebar-logo{padding:0 20px 20px;border-bottom:1px solid #334155;margin-bottom:12px;}
+.sidebar-logo h2{color:white;font-size:15px;font-weight:900;line-height:1.3;}
+.sidebar-logo p{color:#94A3B8;font-size:11px;margin-top:3px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:11px 20px;color:#94A3B8;cursor:pointer;font-size:14px;font-weight:600;transition:all .15s;border-left:3px solid transparent;}
+.nav-item:hover{background:#334155;color:white;}
+.nav-item.active{background:#334155;color:white;border-left-color:var(--orange);}
+.nav-item .nav-icon{font-size:16px;width:20px;text-align:center;}
+.main{margin-left:220px;padding:28px;}
+
+/* Page */
+.page{display:none;}
+.page.active{display:block;}
+.page-title{font-size:22px;font-weight:900;margin-bottom:20px;display:flex;align-items:center;gap:10px;}
+
+/* Card */
+.card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:20px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.04);}
+.card-title{font-size:15px;font-weight:700;margin-bottom:14px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+
+/* Form */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.form-row.single{grid-template-columns:1fr;}
+.form-row.triple{grid-template-columns:1fr 1fr 1fr;}
+.form-group label{font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:5px;}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;transition:border-color .2s;background:white;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--orange);}
+.form-group textarea{resize:vertical;min-height:80px;}
+
+/* Buttons */
+.btn{padding:9px 18px;border-radius:8px;border:none;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;display:inline-flex;align-items:center;gap:6px;}
+.btn-primary{background:var(--orange);color:white;}
+.btn-primary:hover{background:#EA6A00;}
+.btn-success{background:var(--green);color:white;}
+.btn-success:hover{background:#16A34A;}
+.btn-danger{background:var(--red);color:white;}
+.btn-danger:hover{background:#C53030;}
+.btn-ghost{background:transparent;color:var(--muted);border:1.5px solid var(--border);}
+.btn-ghost:hover{border-color:var(--orange);color:var(--orange);}
+.btn-sm{padding:5px 12px;font-size:12px;}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+
+/* Table */
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{background:#F8FAFC;padding:10px 12px;text-align:left;font-weight:700;color:var(--muted);border-bottom:2px solid var(--border);}
+td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle;}
+tr:hover td{background:#FAFAFA;}
+
+/* Restaurant cards */
+.rest-list{display:flex;flex-direction:column;gap:10px;}
+.rest-item{border:1.5px solid var(--border);border-radius:10px;padding:14px;display:flex;align-items:center;gap:12px;background:white;}
+.rest-emoji-big{font-size:32px;width:48px;text-align:center;}
+.rest-item-info{flex:1;}
+.rest-item-name{font-size:15px;font-weight:700;}
+.rest-item-meta{font-size:12px;color:var(--muted);margin-top:3px;}
+.rest-item-actions{display:flex;gap:6px;}
+
+/* Dish tags */
+.dish-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.dish-tag{background:#F1F5F9;border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:12px;display:flex;align-items:center;gap:4px;}
+.dish-tag-del{cursor:pointer;color:var(--muted);font-size:14px;line-height:1;}
+.dish-tag-del:hover{color:var(--red);}
+
+/* Month tags */
+.month-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.month-tag{background:var(--orange);color:white;border-radius:6px;padding:4px 12px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;}
+.month-tag-del{cursor:pointer;opacity:.7;}
+.month-tag-del:hover{opacity:1;}
+
+/* Reason tags */
+.reason-tags{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
+.reason-tag{background:#F1F5F9;border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;display:flex;align-items:center;justify-content:space-between;}
+.reason-del{cursor:pointer;color:var(--muted);font-size:16px;}
+.reason-del:hover{color:var(--red);}
+
+/* Stats mini */
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
+.stat-box{background:white;border:1.5px solid var(--border);border-radius:10px;padding:14px;text-align:center;}
+.stat-num{font-size:28px;font-weight:900;color:var(--orange);}
+.stat-label{font-size:12px;color:var(--muted);margin-top:3px;}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;background:#1E293B;color:white;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.2);transform:translateY(80px);opacity:0;transition:all .3s;z-index:999;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.success{background:var(--green);}
+.toast.error{background:var(--red);}
+
+/* Status badge */
+.badge{padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;}
+.badge-open{background:#DCFCE7;color:#16A34A;}
+.badge-closed{background:#FEE2E2;color:#DC2626;}
+
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;}
+.modal-overlay.show{display:flex;}
+.modal-box{background:white;border-radius:16px;padding:24px;width:480px;max-width:90vw;max-height:90vh;overflow-y:auto;}
+.modal-title{font-size:17px;font-weight:900;margin-bottom:16px;}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;}
+</style>
+</head>
+<body>
+
+<!-- 登入畫面 -->
+<div class="login-wrap" id="login-wrap">
+  <div class="login-box">
+    <div style="font-size:48px;margin-bottom:12px">🔐</div>
+    <h1>後台管理</h1>
+    <p>聚餐好選擇 V2</p>
+    <input type="password" id="pwd-input" placeholder="輸入密碼" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">登入</button>
+  </div>
+</div>
+
+<!-- 後台主體 -->
+<div class="admin-wrap" id="admin-wrap">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <h2>🍽️ 聚餐好選擇<br>V2 後台</h2>
+      <p id="sb-event-name"></p>
+    </div>
+    <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard">
+      <span class="nav-icon">📊</span> 總覽
+    </div>
+    <div class="nav-item" onclick="showPage('settings')" id="nav-settings">
+      <span class="nav-icon">⚙️</span> 活動設定
+    </div>
+    <div class="nav-item" onclick="showPage('restaurants')" id="nav-restaurants">
+      <span class="nav-icon">🍜</span> 餐廳管理
+    </div>
+    <div class="nav-item" onclick="showPage('votes')" id="nav-votes">
+      <span class="nav-icon">🗳️</span> 投票紀錄
+    </div>
+    <div class="nav-item" onclick="window.open('index.html','_blank')" style="margin-top:auto;">
+      <span class="nav-icon">🔗</span> 前往前台
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- 總覽 -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-title">📊 總覽</div>
+      <div class="stat-grid" id="stat-grid">
+        <div class="stat-box"><div class="stat-num" id="s-total">-</div><div class="stat-label">總投票人數</div></div>
+        <div class="stat-box"><div class="stat-num" id="s-drink">-</div><div class="stat-label">喝酒人數</div></div>
+        <div class="stat-box"><div class="stat-num" id="s-top">-</div><div class="stat-label">最高票餐廳得票</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">🏆 最高票餐廳</div>
+        <div id="dash-top-rest" style="font-size:18px;font-weight:900;color:var(--orange)">載入中...</div>
+      </div>
+      <div class="card">
+        <div class="card-title">✅ 大家都可以的日期</div>
+        <div id="dash-common-dates" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📅 各日期可參加人數</div>
+        <div id="dash-dates"></div>
+      </div>
+    </div>
+
+    <!-- 活動設定 -->
+    <div class="page" id="page-settings">
+      <div class="page-title">⚙️ 活動設定</div>
+      <div class="card">
+        <div class="card-title">基本資料</div>
+        <div class="form-row single">
+          <div class="form-group">
+            <label>活動名稱</label>
+            <input type="text" id="cfg-name" placeholder="聚餐好選擇 V2">
+          </div>
+        </div>
+        <div class="form-row single">
+          <div class="form-group">
+            <label>投票截止日期（選填）</label>
+            <input type="date" id="cfg-deadline">
+          </div>
+        </div>
+        <div class="form-row single">
+          <div class="form-group">
+            <label>投票狀態</label>
+            <select id="cfg-status">
+              <option value="open">開放投票</option>
+              <option value="closed">關閉投票</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">聚餐理由</div>
+        <div class="reason-tags" id="reason-tags"></div>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="new-reason" placeholder="輸入新的聚餐理由" style="flex:1;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;">
+          <button class="btn btn-ghost" onclick="addReason()">+ 新增</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">可選月份</div>
+        <div class="month-tags" id="month-tags"></div>
+        <div style="display:flex;gap:8px;">
+          <input type="month" id="new-month" style="flex:1;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;">
+          <button class="btn btn-ghost" onclick="addMonth()">+ 新增</button>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="saveConfig()">💾 儲存設定</button>
+    </div>
+
+    <!-- 餐廳管理 -->
+    <div class="page" id="page-restaurants">
+      <div class="page-title">🍜 餐廳管理</div>
+      <div class="card">
+        <div class="card-title">新增餐廳</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>餐廳名稱 *</label>
+            <input type="text" id="r-name" placeholder="嚐嚐九九-中壢店">
+          </div>
+          <div class="form-group">
+            <label>Emoji 圖示</label>
+            <input type="text" id="r-emoji" placeholder="🥘" maxlength="4">
+          </div>
+        </div>
+        <div class="form-row triple">
+          <div class="form-group">
+            <label>星星數</label>
+            <input type="text" id="r-stars" placeholder="4.3">
+          </div>
+          <div class="form-group">
+            <label>評價人數</label>
+            <input type="text" id="r-review" placeholder="4,259">
+          </div>
+          <div class="form-group">
+            <label>平均消費</label>
+            <input type="text" id="r-cost" placeholder="$200-400">
+          </div>
+        </div>
+        <div class="form-row single">
+          <div class="form-group">
+            <label>Google Maps 連結</label>
+            <input type="text" id="r-mapurl" placeholder="https://maps.app.goo.gl/...">
+          </div>
+        </div>
+        <button class="btn btn-success" onclick="addRestaurant()">+ 新增餐廳</button>
+      </div>
+
+      <div class="rest-list" id="rest-list"></div>
+    </div>
+
+    <!-- 投票紀錄 -->
+    <div class="page" id="page-votes">
+      <div class="page-title">🗳️ 投票紀錄</div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div class="card-title" style="margin-bottom:0">所有投票</div>
+          <button class="btn btn-danger btn-sm" onclick="confirmResetVotes()">🗑️ 清空所有投票</button>
+        </div>
+        <div class="table-wrap">
+          <table id="votes-table">
+            <thead><tr>
+              <th>姓名</th><th>公司</th><th>喝酒</th><th>餐廳</th><th>贊助</th><th>時間</th><th>操作</th>
+            </tr></thead>
+            <tbody id="votes-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /admin-wrap -->
+
+<!-- 編輯餐廳 Modal -->
+<div class="modal-overlay" id="edit-rest-modal">
+  <div class="modal-box">
+    <div class="modal-title">✏️ 編輯餐廳</div>
+    <input type="hidden" id="edit-r-id">
+    <div class="form-row">
+      <div class="form-group"><label>餐廳名稱</label><input type="text" id="edit-r-name"></div>
+      <div class="form-group"><label>Emoji</label><input type="text" id="edit-r-emoji" maxlength="4"></div>
+    </div>
+    <div class="form-row triple">
+      <div class="form-group"><label>星星數</label><input type="text" id="edit-r-stars"></div>
+      <div class="form-group"><label>評價人數</label><input type="text" id="edit-r-review"></div>
+      <div class="form-group"><label>平均消費</label><input type="text" id="edit-r-cost"></div>
+    </div>
+    <div class="form-row single">
+      <div class="form-group"><label>Google Maps 連結</label><input type="text" id="edit-r-mapurl"></div>
+    </div>
+    <!-- 菜色管理 -->
+    <div style="margin-top:12px;">
+      <div class="card-title">🍽️ 菜色清單</div>
+      <div class="dish-tags" id="edit-dish-tags"></div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <input type="text" id="new-dish-input" placeholder="輸入菜色名稱" style="flex:1;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;" onkeydown="if(event.key==='Enter')addDish()">
+        <button class="btn btn-ghost btn-sm" onclick="addDish()">+ 新增</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeEditModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveRestaurant()">💾 儲存</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const GAS_URL = 'YOUR_GAS_DEPLOY_URL';
+const ADMIN_PWD = '54222486';
+
+let config = {};
+let editingRestId = null;
+
+// ── 登入 ──
+function doLogin() {
+  const pwd = document.getElementById('pwd-input').value;
+  if (pwd === ADMIN_PWD) {
+    document.getElementById('login-wrap').style.display = 'none';
+    document.getElementById('admin-wrap').style.display = 'flex';
+    loadAll();
+  } else {
+    showToast('密碼錯誤！', 'error');
+    document.getElementById('pwd-input').value = '';
+  }
+}
+
+// ── 載入所有資料 ──
+function loadAll() {
+  jsonp(`${GAS_URL}?action=getConfig`, (res) => {
+    if (!res || res.status !== 'ok') return showToast('載入設定失敗', 'error');
+    config = res;
+    document.getElementById('sb-event-name').textContent = res.event_name;
+    renderSettings();
+    renderRestaurants();
+  });
+  loadStats();
+  loadVotes();
+}
+
+// ── 頁面切換 ──
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(`page-${name}`).classList.add('active');
+  document.getElementById(`nav-${name}`).classList.add('active');
+  if (name === 'dashboard') loadStats();
+  if (name === 'votes') loadVotes();
+}
+
+// ── 統計總覽 ──
+function loadStats() {
+  jsonp(`${GAS_URL}?action=getStats`, (res) => {
+    if (!res || res.status !== 'ok') return;
+    document.getElementById('s-total').textContent = res.totalVoters;
+    document.getElementById('s-drink').textContent = res.drinkCount;
+    document.getElementById('s-top').textContent = res.topRestaurantCount || 0;
+
+    // 最高票餐廳名稱
+    const rest = (config.restaurants || []).find(r => r.id === res.topRestId);
+    document.getElementById('dash-top-rest').textContent = rest ? `${rest.emoji} ${rest.name}` : '尚無資料';
+
+    // 大家都可以的日期
+    const cdEl = document.getElementById('dash-common-dates');
+    if (res.commonDates?.length > 0) {
+      cdEl.innerHTML = res.commonDates.map(d => `<span style="background:var(--green);color:white;padding:5px 12px;border-radius:20px;font-size:13px;font-weight:700;">${formatDate(d)}</span>`).join('');
+    } else {
+      cdEl.innerHTML = '<span style="color:var(--muted);font-size:13px;">目前沒有大家都可以的日期</span>';
+    }
+
+    // 日期長條圖
+    const dEl = document.getElementById('dash-dates');
+    if (res.availableDates?.length > 0) {
+      dEl.innerHTML = res.availableDates.slice(0,20).map(x => {
+        const pct = x.total > 0 ? Math.round(x.count/x.total*100) : 0;
+        return `<div style="margin-bottom:8px;">
+          <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:3px;">
+            <span>${formatDate(x.date)}</span><span>${x.count}/${x.total} 人（${pct}%）</span>
+          </div>
+          <div style="height:8px;background:#F1F5F9;border-radius:4px;overflow:hidden;">
+            <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#16A34A,#22C55E);border-radius:4px;transition:width .8s;"></div>
+          </div>
+        </div>`;
+      }).join('');
+    } else {
+      dEl.innerHTML = '<span style="color:var(--muted);font-size:13px;">尚無日期資料</span>';
+    }
+  });
+}
+
+// ── 活動設定 ──
+function renderSettings() {
+  document.getElementById('cfg-name').value = config.event_name || '';
+  document.getElementById('cfg-deadline').value = config.deadline || '';
+  document.getElementById('cfg-status').value = config.vote_status || 'open';
+
+  // 理由
+  const rt = document.getElementById('reason-tags');
+  rt.innerHTML = (config.event_reasons || []).map((r,i) =>
+    `<div class="reason-tag"><span>${r}</span><span class="reason-del" onclick="deleteReason(${i})">×</span></div>`
+  ).join('');
+
+  // 月份
+  const mt = document.getElementById('month-tags');
+  mt.innerHTML = (config.months || []).map((m,i) =>
+    `<span class="month-tag">${m}<span class="month-tag-del" onclick="deleteMonth(${i})">×</span></span>`
+  ).join('');
+}
+
+function addReason() {
+  const val = document.getElementById('new-reason').value.trim();
+  if (!val) return;
+  config.event_reasons = config.event_reasons || [];
+  config.event_reasons.push(val);
+  document.getElementById('new-reason').value = '';
+  renderSettings();
+}
+function deleteReason(i) { config.event_reasons.splice(i,1); renderSettings(); }
+
+function addMonth() {
+  const val = document.getElementById('new-month').value;
+  if (!val) return;
+  config.months = config.months || [];
+  if (!config.months.includes(val)) config.months.push(val);
+  document.getElementById('new-month').value = '';
+  renderSettings();
+}
+function deleteMonth(i) { config.months.splice(i,1); renderSettings(); }
+
+function saveConfig() {
+  const payload = {
+    action:'adminSaveConfig', pwd: ADMIN_PWD,
+    event_name: document.getElementById('cfg-name').value,
+    event_reasons: config.event_reasons || [],
+    months: config.months || [],
+    deadline: document.getElementById('cfg-deadline').value,
+    vote_status: document.getElementById('cfg-status').value
+  };
+  postGAS(payload, () => { showToast('✅ 設定已儲存！', 'success'); loadAll(); });
+}
+
+// ── 餐廳管理 ──
+function renderRestaurants() {
+  const list = document.getElementById('rest-list');
+  const rests = config.restaurants || [];
+  if (rests.length === 0) {
+    list.innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px;">還沒有餐廳，請新增</div>';
+    return;
+  }
+  list.innerHTML = rests.map(r => `
+    <div class="rest-item">
+      <div class="rest-emoji-big">${r.emoji}</div>
+      <div class="rest-item-info">
+        <div class="rest-item-name">${r.name}</div>
+        <div class="rest-item-meta">⭐ ${r.stars}（${r.review_count} 評）・💰 ${r.avg_cost}・<a href="${r.map_url}" target="_blank" style="color:var(--orange);">📍 地圖</a></div>
+        <div class="dish-tags" style="margin-top:6px;">${((config.dishes||{})[r.id]||[]).map(d=>`<span style="background:#F1F5F9;border:1px solid var(--border);border-radius:5px;padding:2px 8px;font-size:11px;">${d}</span>`).join('')}</div>
+      </div>
+      <div class="rest-item-actions">
+        <button class="btn btn-ghost btn-sm" onclick="openEditModal('${r.id}')">✏️ 編輯</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteRestaurant('${r.id}','${r.name}')">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function addRestaurant() {
+  const name = document.getElementById('r-name').value.trim();
+  if (!name) return showToast('請輸入餐廳名稱', 'error');
+  const payload = {
+    action:'adminAddRestaurant', pwd: ADMIN_PWD,
+    name, emoji: document.getElementById('r-emoji').value || '🍽️',
+    stars: document.getElementById('r-stars').value,
+    review_count: document.getElementById('r-review').value,
+    avg_cost: document.getElementById('r-cost').value,
+    map_url: document.getElementById('r-mapurl').value
+  };
+  postGAS(payload, () => {
+    showToast('✅ 餐廳已新增！', 'success');
+    ['r-name','r-emoji','r-stars','r-review','r-cost','r-mapurl'].forEach(id => document.getElementById(id).value='');
+    loadAll();
+  });
+}
+
+function deleteRestaurant(id, name) {
+  if (!confirm(`確定刪除「${name}」？相關菜色也會一併刪除。`)) return;
+  postGAS({ action:'adminDeleteRestaurant', pwd:ADMIN_PWD, id }, () => {
+    showToast('已刪除', 'success'); loadAll();
+  });
+}
+
+// ── 編輯餐廳 Modal ──
+function openEditModal(id) {
+  editingRestId = id;
+  const r = (config.restaurants||[]).find(r=>r.id===id);
+  if (!r) return;
+  document.getElementById('edit-r-id').value = id;
+  document.getElementById('edit-r-name').value = r.name;
+  document.getElementById('edit-r-emoji').value = r.emoji;
+  document.getElementById('edit-r-stars').value = r.stars;
+  document.getElementById('edit-r-review').value = r.review_count;
+  document.getElementById('edit-r-cost').value = r.avg_cost;
+  document.getElementById('edit-r-mapurl').value = r.map_url;
+  renderDishTags(id);
+  document.getElementById('edit-rest-modal').classList.add('show');
+}
+
+function closeEditModal() {
+  document.getElementById('edit-rest-modal').classList.remove('show');
+  editingRestId = null;
+}
+
+function renderDishTags(id) {
+  const dishes = (config.dishes||{})[id] || [];
+  document.getElementById('edit-dish-tags').innerHTML = dishes.map(d =>
+    `<div class="dish-tag">${d}<span class="dish-tag-del" onclick="deleteDish('${id}','${d.replace(/'/g,"\\'")}')">×</span></div>`
+  ).join('');
+}
+
+function addDish() {
+  const name = document.getElementById('new-dish-input').value.trim();
+  if (!name || !editingRestId) return;
+  postGAS({ action:'adminAddDish', pwd:ADMIN_PWD, restaurant_id:editingRestId, dish_name:name }, () => {
+    document.getElementById('new-dish-input').value = '';
+    if (!config.dishes) config.dishes = {};
+    if (!config.dishes[editingRestId]) config.dishes[editingRestId] = [];
+    config.dishes[editingRestId].push(name);
+    renderDishTags(editingRestId);
+    renderRestaurants();
+  });
+}
+
+function deleteDish(rid, name) {
+  postGAS({ action:'adminDeleteDish', pwd:ADMIN_PWD, restaurant_id:rid, dish_name:name }, () => {
+    config.dishes[rid] = (config.dishes[rid]||[]).filter(d=>d!==name);
+    renderDishTags(rid);
+    renderRestaurants();
+  });
+}
+
+function saveRestaurant() {
+  const id = document.getElementById('edit-r-id').value;
+  const payload = {
+    action:'adminUpdateRestaurant', pwd:ADMIN_PWD, id,
+    name: document.getElementById('edit-r-name').value,
+    emoji: document.getElementById('edit-r-emoji').value || '🍽️',
+    stars: document.getElementById('edit-r-stars').value,
+    review_count: document.getElementById('edit-r-review').value,
+    avg_cost: document.getElementById('edit-r-cost').value,
+    map_url: document.getElementById('edit-r-mapurl').value
+  };
+  postGAS(payload, () => { showToast('✅ 已儲存！', 'success'); closeEditModal(); loadAll(); });
+}
+
+// ── 投票紀錄 ──
+function loadVotes() {
+  jsonp(`${GAS_URL}?action=getVotes&pwd=${ADMIN_PWD}`, (res) => {
+    if (!res || res.status !== 'ok') return;
+    const tbody = document.getElementById('votes-tbody');
+    const rests = config.restaurants || [];
+    tbody.innerHTML = (res.votes||[]).map(v => {
+      const r = rests.find(r=>r.id===v.restaurant_id);
+      const restName = r ? `${r.emoji} ${r.name}` : v.restaurant_id;
+      const ts = v.timestamp ? new Date(v.timestamp).toLocaleString('zh-TW') : '';
+      return `<tr>
+        <td><strong>${v.name}</strong></td>
+        <td>${v.company}</td>
+        <td>${v.drink==='是'?'🍺 是':'🧃 否'}</td>
+        <td>${restName}</td>
+        <td style="font-size:12px">${v.sponsor||''}</td>
+        <td style="font-size:12px;color:var(--muted)">${ts}</td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteVote('${v.voter_id}','${v.name}')">刪除</button></td>
+      </tr>`;
+    }).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px;">尚無投票紀錄</td></tr>';
+  });
+}
+
+function deleteVote(voterId, name) {
+  if (!confirm(`確定刪除「${name}」的投票？`)) return;
+  postGAS({ action:'adminDeleteVote', pwd:ADMIN_PWD, voter_id:voterId }, () => {
+    showToast('已刪除', 'success'); loadVotes(); loadStats();
+  });
+}
+
+function confirmResetVotes() {
+  if (!confirm('⚠️ 確定清空所有投票紀錄？此操作無法復原！')) return;
+  postGAS({ action:'adminResetVotes', pwd:ADMIN_PWD }, () => {
+    showToast('✅ 已清空所有投票', 'success'); loadVotes(); loadStats();
+  });
+}
+
+// ── 工具 ──
+function formatDate(dateKey) {
+  const d = new Date(dateKey + 'T00:00:00+08:00');
+  const dow = ['日','一','二','三','四','五','六'][d.getDay()];
+  return `${d.getMonth()+1}/${d.getDate()}（${dow}）`;
+}
+
+function postGAS(payload, onSuccess) {
+  fetch(GAS_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) })
+  .then(() => { if (onSuccess) onSuccess(); })
+  .catch(() => showToast('操作失敗，請再試', 'error'));
+}
+
+function jsonp(url, callback) {
+  const cb = '_adm' + Date.now();
+  window[cb] = (data) => { callback(data); delete window[cb]; document.head.removeChild(script); };
+  const script = document.createElement('script');
+  script.src = url + (url.includes('?')?'&':'?') + `callback=${cb}&t=${Date.now()}`;
+  script.onerror = () => { callback(null); delete window[cb]; };
+  document.head.appendChild(script);
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `toast ${type} show`;
+  clearTimeout(window._tt);
+  window._tt = setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
