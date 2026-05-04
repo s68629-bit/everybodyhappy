@@ -100,6 +100,21 @@ function initSheets() {
   return { status:'ok', message:'Sheets initialized' };
 }
 
+// ── 日期值清洗（防止 Sheets 自動轉成 Date 物件）──────────────
+function cleanDateValue(val) {
+  if (!val || val === '') return '';
+  if (val instanceof Date) {
+    return Utilities.formatDate(val, 'Asia/Taipei', 'yyyy-MM-dd');
+  }
+  const s = String(val).trim();
+  if (s === '' || s === 'undefined' || s === 'null') return '';
+  const d = new Date(s);
+  if (!isNaN(d.getTime()) && s.length > 10) {
+    return Utilities.formatDate(d, 'Asia/Taipei', 'yyyy-MM-dd');
+  }
+  return s;
+}
+
 // ── 讀取前台設定 ─────────────────────────────────────────────
 function getConfig() {
   const ss = SpreadsheetApp.openById(SHEET_ID);
@@ -108,7 +123,9 @@ function getConfig() {
   const settingsMap = {};
   const sData = ss.getSheetByName('settings').getDataRange().getValues();
   for (let i = 1; i < sData.length; i++) {
-    settingsMap[String(sData[i][0])] = String(sData[i][1]);
+    const key = String(sData[i][0]);
+    const raw = sData[i][1];
+    settingsMap[key] = (key === 'deadline') ? cleanDateValue(raw) : String(raw);
   }
 
   // restaurants
@@ -335,7 +352,12 @@ function adminSaveConfig(data) {
   };
   for (let i = 1; i < rows.length; i++) {
     const key = String(rows[i][0]);
-    if (key in updates) s.getRange(i+1, 2).setValue(updates[key]);
+    if (key in updates) {
+      const cell = s.getRange(i+1, 2);
+      cell.setValue(updates[key]);
+      // deadline 欄位強制文字格式
+      if (key === 'deadline') cell.setNumberFormat('@STRING@');
+    }
   }
   return { status:'ok' };
 }
