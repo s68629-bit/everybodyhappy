@@ -256,7 +256,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 <div class="toast" id="toast"></div>
 
 <script>
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbxuDGxZHqog8BctGTyCh24J3IrPis0LEo2FVQCCTMc23GbSYzFCpWbInnEG0eV_8_jt/exec';
+const GAS_URL = 'YOUR_GAS_DEPLOY_URL';
 const MONTH_NAMES = ['','一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
 const DOW_NAMES = ['日','一','二','三','四','五','六'];
 
@@ -285,7 +285,10 @@ function applyConfig() {
   // 截止日期
   if (config.deadline) {
     const dl = document.getElementById('deadline-bar');
-    dl.textContent = `⏰ 投票截止日：${config.deadline}`;
+    const d = new Date(config.deadline + 'T00:00:00+08:00');
+    const dow = ['日','一','二','三','四','五','六'][d.getDay()];
+    const dateStr = `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}（${dow}）`;
+    dl.textContent = `⏰ 投票截止日：${dateStr}`;
     dl.style.display = 'block';
   }
 
