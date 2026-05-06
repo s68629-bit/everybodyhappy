@@ -135,6 +135,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 
 <div class="banner">
   <button class="stats-btn" onclick="showStats()">📊 查看統計</button>
+  <button class="switch-btn" onclick="switchVoter()">🔄 切換投票人</button>
   <h1 id="banner-title">🍽️ 聚餐好選擇 V2</h1>
   <div class="subtitle" id="banner-reasons"></div>
 </div>
@@ -499,6 +500,16 @@ function doSubmit(sponsor){
   }).catch(()=>{showToast('❌ 送出失敗','error');if(btn){btn.disabled=false;btn.textContent='🎉 送出投票';}});
 }
 
+function switchVoter(){
+  if(!confirm('切換投票人？目前的登入狀態將會清除。')) return;
+  localStorage.removeItem('jc_name');
+  localStorage.removeItem('jc_company');
+  resetForm();
+  document.getElementById('voted-banner').style.display='none';
+  const btn=document.getElementById('submit-btn');
+  if(btn){btn.disabled=false;btn.textContent='🎉 送出投票';}
+  showToast('已切換，請重新填寫！','success');
+}
 function resetForm(){
   state={name:'',company:'',drink:'',restaurantId:'',dishes:[],busyDates:[],selectedMonth:'',isEditing:false,voterId:'',otherReason:''};
   document.getElementById('name').value='';
